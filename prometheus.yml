@@ -1,0 +1,17 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: grafana
+    static_configs:
+      - targets: ['grafana:3000']
+
+  # Docker-Daemon-Metriken via TCP (einmalig in /etc/docker/daemon.json aktivieren):
+  # {"metrics-addr": "127.0.0.1:9323", "experimental": true}
+  - job_name: docker
+    static_configs:
+      - targets: ['host.docker.internal:9323']

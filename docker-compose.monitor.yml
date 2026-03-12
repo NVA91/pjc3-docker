@@ -1,0 +1,98 @@
+# docker-compose.monitor.yml — Monitoring-Erweiterung
+# Verwendung: AGENT_NAMESPACE=CLAUDE make up-monitor
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    user: "${AGENT_UID}:${AGENT_GID}"
+    volumes:
+      - type: bind
+        source: ./prometheus.yml
+        target: /etc/prometheus/prometheus.yml
+        read_only: true
+        bind:
+          propagation: rprivate
+      - type: volume
+        source: prometheus-data
+        target: /prometheus
+    networks:
+      - home-net
+    security_opt:
+      - no-new-privileges:true
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    user: "${AGENT_UID}:${AGENT_GID}"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD_FILE=/run/secrets/grafana_admin_pass
+    volumes:
+      - type: volume
+        source: grafana-data
+        target: /var/lib/grafana
+      - type: bind
+        source: ./secrets
+        target: /run/secrets
+        read_only: true
+        bind:
+          propagation: rprivate
+    networks:
+      - home-net
+    security_opt:
+      - no-new-privileges:true
+
+  loki:
+    image: grafana/loki:3.1.1
+    restart: unless-stopped
+    user: "${AGENT_UID}:${AGENT_GID}"
+    volumes:
+      - type: bind
+        source: ./loki-config.yml
+        target: /etc/loki/local-config.yaml
+        read_only: true
+        bind:
+          propagation: rprivate
+      - type: tmpfs
+        target: /tmp/loki
+        tmpfs:
+          size: 500M
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - home-net
+    security_opt:
+      - no-new-privileges:true
+
+  # SECURITY-EXCEPTION: node-exporter benötigt /proc + /sys (Kernel-Interfaces)
+  # Nur via: docker compose --profile extended up
+  node-exporter:
+    image: prom/node-exporter:latest
+    restart: unless-stopped
+    profiles: ["extended"]
+    volumes:
+      - type: bind
+        source: /proc
+        target: /host/proc
+        read_only: true
+        bind:
+          propagation: rprivate
+      - type: bind
+        source: /sys
+        target: /host/sys
+        read_only: true
+        bind:
+          propagation: rprivate
+    command:
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --no-collector.filesystem
+    networks:
+      - home-net
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  prometheus-data:
+    name: "${AGENT_NAMESPACE}-pjc3docker-vol-prometheus"
+  grafana-data:
+    name: "${AGENT_NAMESPACE}-pjc3docker-vol-grafana"

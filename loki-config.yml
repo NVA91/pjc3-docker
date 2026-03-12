@@ -1,0 +1,24 @@
+auth_enabled: false
+server:
+  http_listen_port: 3100
+ingester:
+  lifecycler:
+    address: 127.0.0.1
+  chunk_idle_period: 1h
+  max_chunk_age: 1h
+schema_config:
+  configs:
+    - from: 2024-01-01
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+storage_config:
+  tsdb_shipper:
+    active_index_directory: /tmp/loki/tsdb-shipper-active
+    cache_location: /tmp/loki/tsdb-shipper-cache
+    shared_store: filesystem
+  filesystem:
+    directory: /tmp/loki/chunks
