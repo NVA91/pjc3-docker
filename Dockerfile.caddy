@@ -1,0 +1,13 @@
+# Dockerfile.caddy — Custom Caddy Build mit cloudflare DNS-01 Plugin
+# xcaddy kompiliert Caddy + Plugin in einem Multi-Stage-Build
+# Ergebnis: caddy-cloudflare:local (für docker-compose.yml build:)
+
+FROM caddy:2-builder-alpine AS builder
+
+RUN xcaddy build \
+    --with github.com/caddy-dns/cloudflare
+
+FROM caddy:2-alpine
+
+# Nur das fertige Binary übernehmen — kein Build-Tooling im finalen Image
+COPY --from=builder /usr/bin/caddy /usr/bin/caddy
