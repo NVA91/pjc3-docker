@@ -1,0 +1,49 @@
+# docker-compose.override.example.yml
+#
+# Vorlage für eigene Projekte. Kopieren:
+#   cp docker-compose.override.example.yml docker-compose.override.yml
+#
+# Docker Compose lädt docker-compose.override.yml automatisch zusätzlich
+# zur docker-compose.yml — kein extra -f Flag nötig.
+#
+# Pattern: Neuer Service + Named Volume + Caddy-Route (via Caddyfile)
+
+# === BEISPIEL: PostgreSQL für projekt-x ===
+services:
+  postgres-projektx:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    user: "${AGENT_UID}:${AGENT_GID}"
+    environment:
+      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
+      - POSTGRES_DB=projektx
+      - POSTGRES_USER=projektx
+    volumes:
+      - type: volume
+        source: postgres-projektx-data
+        target: /var/lib/postgresql/data
+      - type: bind
+        source: ./secrets
+        target: /run/secrets
+        read_only: true
+        bind:
+          propagation: rprivate
+    ports:
+      - "127.0.0.1:5432:5432"
+    networks:
+      - home-net
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - "agent.namespace=${AGENT_NAMESPACE}"
+
+volumes:
+  postgres-projektx-data:
+    name: "${AGENT_NAMESPACE}-pjc3docker-vol-postgres-projektx"
+
+# Caddyfile-Erweiterung (manuell in Caddyfile einfügen):
+#
+# @pgadmin host pgadmin.{$HOME_DOMAIN}
+# handle @pgadmin {
+#   reverse_proxy pgadmin:80
+# }
