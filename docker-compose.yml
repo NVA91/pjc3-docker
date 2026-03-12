@@ -1,0 +1,66 @@
+# docker-compose.yml — Core Stack
+# Verwendung: AGENT_NAMESPACE=CLAUDE AGENT_UID=1001 AGENT_GID=1001 make up
+# Caddy wird via Dockerfile.caddy custom gebaut (cloudflare DNS-Plugin) — kommt in Task 11
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:80:80"
+      - "127.0.0.1:443:443"
+    user: "${AGENT_UID}:${AGENT_GID}"
+    volumes:
+      - type: volume
+        source: caddy-data
+        target: /data
+      - type: volume
+        source: caddy-config
+        target: /config
+      - type: bind
+        source: ./Caddyfile
+        target: /etc/caddy/Caddyfile
+        read_only: true
+        bind:
+          propagation: rprivate
+    networks:
+      - home-net
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - "agent.namespace=${AGENT_NAMESPACE}"
+
+  vaultwarden:
+    image: vaultwarden/server:latest
+    restart: unless-stopped
+    user: "${AGENT_UID}:${AGENT_GID}"
+    environment:
+      - ADMIN_TOKEN_FILE=/run/secrets/vw_admin_token
+    volumes:
+      - type: volume
+        source: vw-data
+        target: /data
+      - type: bind
+        source: ./secrets
+        target: /run/secrets
+        read_only: true
+        bind:
+          propagation: rprivate
+    networks:
+      - home-net
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - "agent.namespace=${AGENT_NAMESPACE}"
+
+networks:
+  home-net:
+    driver: bridge
+
+volumes:
+  caddy-data:
+    name: "${AGENT_NAMESPACE}-pjc3docker-vol-caddy-data"
+  caddy-config:
+    name: "${AGENT_NAMESPACE}-pjc3docker-vol-caddy-config"
+  vw-data:
+    name: "${AGENT_NAMESPACE}-pjc3docker-vol-vw-data"

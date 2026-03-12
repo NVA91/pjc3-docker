@@ -1,0 +1,5 @@
+# Caddyfile — vorläufig (wird in Task 13 durch Wildcard-SSL-Version ersetzt)
+vault.local {
+  reverse_proxy vaultwarden:80
+  tls internal
+}
