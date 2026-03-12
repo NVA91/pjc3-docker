@@ -4,12 +4,19 @@
 
 services:
   caddy:
-    image: caddy:2-alpine
+    # Custom Build mit cloudflare DNS-01 Plugin (Dockerfile.caddy)
+    build:
+      context: .
+      dockerfile: Dockerfile.caddy
+    image: caddy-cloudflare:local
     restart: unless-stopped
     ports:
       - "127.0.0.1:80:80"
       - "127.0.0.1:443:443"
     user: "${AGENT_UID}:${AGENT_GID}"
+    environment:
+      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
+      - HOME_DOMAIN=${HOME_DOMAIN}
     volumes:
       - type: volume
         source: caddy-data
@@ -53,6 +60,47 @@ services:
     labels:
       - "agent.namespace=${AGENT_NAMESPACE}"
 
+  pihole:
+    image: pihole/pihole:latest
+    restart: unless-stopped
+    # SECURITY-EXCEPTION: Pi-hole dnsmasq-Daemon benötigt intern root.
+    # Kompensation: no-new-privileges, kein docker.sock-Mount, Port nur auf LAN-IP.
+    ports:
+      - "${LAN_IP}:53:53/tcp"
+      - "${LAN_IP}:53:53/udp"
+    environment:
+      - WEBPASSWORD_FILE=/run/secrets/pihole_webpassword
+      - PIHOLE_DNS_=1.1.1.1;9.9.9.9
+      - DNSSEC=true
+      - DNSMASQ_LISTENING=all
+      - VIRTUAL_HOST=pihole.${HOME_DOMAIN}
+    volumes:
+      - type: volume
+        source: pihole-etc
+        target: /etc/pihole
+      - type: volume
+        source: pihole-dnsmasq
+        target: /etc/dnsmasq.d
+      - type: bind
+        source: ./config/pihole-wildcard.conf
+        target: /etc/dnsmasq.d/99-home-wildcard.conf
+        read_only: true
+        bind:
+          propagation: rprivate
+      - type: bind
+        source: ./secrets
+        target: /run/secrets
+        read_only: true
+        bind:
+          propagation: rprivate
+    networks:
+      - home-net
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - "agent.namespace=${AGENT_NAMESPACE}"
+      - "security.exception=root-required-by-pihole-dnsmasq"
+
 networks:
   home-net:
     driver: bridge
@@ -64,3 +112,7 @@ volumes:
     name: "${AGENT_NAMESPACE}-pjc3docker-vol-caddy-config"
   vw-data:
     name: "${AGENT_NAMESPACE}-pjc3docker-vol-vw-data"
+  pihole-etc:
+    name: "${AGENT_NAMESPACE}-pjc3docker-vol-pihole-etc"
+  pihole-dnsmasq:
+    name: "${AGENT_NAMESPACE}-pjc3docker-vol-pihole-dnsmasq"
