@@ -1,5 +1,45 @@
-# Caddyfile — vorläufig (wird in Task 13 durch Wildcard-SSL-Version ersetzt)
-vault.local {
-  reverse_proxy vaultwarden:80
-  tls internal
+# Caddyfile — Wildcard SSL via Cloudflare DNS-01 Challenge
+# Kein inbound-Traffic nötig. Caddy holt Cert bei Let's Encrypt via Cloudflare API.
+# HOME_DOMAIN wird als Umgebungsvariable übergeben (docker-compose environment:)
+
+{
+  # Globaler ACME-DNS-Solver: Cloudflare
+  acme_dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+}
+
+# Wildcard-Zertifikat für *.home.DOMAIN
+# Alle Subdomains teilen sich ein Cert — kein Cert pro Service nötig
+*.{$HOME_DOMAIN} {
+  tls {
+    dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+  }
+
+  # Pi-hole Admin
+  @pihole host pihole.{$HOME_DOMAIN}
+  handle @pihole {
+    reverse_proxy pihole:80
+  }
+
+  # Vaultwarden
+  @vault host vault.{$HOME_DOMAIN}
+  handle @vault {
+    reverse_proxy vaultwarden:80
+  }
+
+  # Grafana (Monitor-Profil)
+  @grafana host grafana.{$HOME_DOMAIN}
+  handle @grafana {
+    reverse_proxy grafana:3000
+  }
+
+  # Prometheus (Monitor-Profil)
+  @prometheus host prometheus.{$HOME_DOMAIN}
+  handle @prometheus {
+    reverse_proxy prometheus:9090
+  }
+
+  # Unbekannte Subdomain → 404
+  handle {
+    respond "Not Found" 404
+  }
 }
