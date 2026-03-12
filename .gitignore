@@ -1,0 +1,14 @@
+# Secrets niemals committen
+.env
+secrets/
+data/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Generierte Dateien
+SYSTEM_VISUALIZATION.md
+*.log
