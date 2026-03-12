@@ -3,7 +3,6 @@
 mcp_docker_agent.py — FastMCP Agenten-Verwalter für pjc3-docker Stack.
 Stellt Claude Tools zur Stack-Verwaltung bereit.
 """
-import sys
 import subprocess
 import json
 import re
