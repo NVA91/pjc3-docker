@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "docker-stack-manager": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["mcp_docker_agent.py"],
+      "cwd": "/home/ubhp-nova/claude-c/pjc3-docker",
+      "env": {
+        "AGENT_NAMESPACE": "CLAUDE",
+        "AGENT_UID": "1001",
+        "AGENT_GID": "1001"
+      }
+    }
+  }
+}
