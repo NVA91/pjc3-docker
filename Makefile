@@ -10,7 +10,7 @@ PROJ_ID       := pjc3docker
 COMPOSE_PROJ  := $(AGENT_NS)-$(PROJ_ID)
 COMPOSE       := docker compose -p $(COMPOSE_PROJ)
 
-.PHONY: up up-monitor down ps logs guard
+.PHONY: up up-monitor down ps logs guard backup
 
 up:
 	@echo "[$(AGENT_NS)/$(PROJ_ID)] Stack starten..."
@@ -37,3 +37,8 @@ ifndef CMD
 	$(error CMD nicht gesetzt. Aufruf: make guard CMD='cat /app/data/foo.json')
 endif
 	@bash safe-container-exec.sh $(PROJ_ID) "$(CMD)"
+
+backup:
+	@echo "[$(AGENT_NS)/$(PROJ_ID)] Starte Backup..."
+	@AGENT_NAMESPACE=$(AGENT_NS) bash backup.sh
+	@echo "[$(AGENT_NS)/$(PROJ_ID)] Backup abgeschlossen."
