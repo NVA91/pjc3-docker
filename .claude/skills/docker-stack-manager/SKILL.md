@@ -1,10 +1,11 @@
 ---
 name: docker-stack-manager
 description: >
-  Verwaltet den pjc3-docker Home-Infrastruktur Stack.
-  Verwende diesen Skill wenn: Stack starten/stoppen, Services prüfen,
-  Logs abrufen, neue Services hinzufügen, Sicherheitsregeln prüfen,
-  system_wizard() für Systemreport, create_secret() für Passwörter.
+  This skill should be used when the user asks to "start the stack", "stop the stack",
+  "check container status", "add a new service", "get logs", "check security rules",
+  "run system_wizard", "create a secret", or works on the pjc3-docker
+  home infrastructure (Caddy, Vaultwarden, Pi-hole, Prometheus, Grafana, Loki).
+version: "1.1"
 ---
 
 # Docker Stack Manager Skill
