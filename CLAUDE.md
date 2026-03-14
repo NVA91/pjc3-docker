@@ -59,6 +59,24 @@ AGENT_NAMESPACE=CLAUDE make ps
 3. Cloudflare Dashboard → My Profile → API Tokens → Create Token
    → Template: "Edit zone DNS" → Zone: deine Domain
 
+## Nächste Aufgabe: Pre-Flight Checkliste implementieren
+
+**Status:** Design approved — Plan noch nicht erstellt
+**Spec:** `docs/superpowers/specs/2026-03-14-preflight-design.md`
+
+**Beim nächsten Start:**
+1. `writing-plans` Skill aufrufen mit der Spec als Grundlage
+2. Plan wird unter `docs/superpowers/plans/2026-03-14-preflight.md` gespeichert
+3. `subagent-driven-development` für Implementierung
+
+**Was entsteht:** `preflight.sh` + `make preflight` — 4-phasige Validierung vor Stack-Start:
+- Phase 1: Syntax & Config (.env, YAML, Caddyfile, Secrets, Ports)
+- Phase 2: .env-Subagent (nur bei fehlendem .env)
+- Phase 3: Dry-Run (AGENT_NAMESPACE=TEST)
+- Phase 4: Test-Namespace Start → manuelles OK → Produktion
+
+---
+
 ## Agent-Workflow: Neuen Service hinzufügen
 
 1. `system_wizard()` aufrufen → Port-Check, Secret-Check, Route-Check
