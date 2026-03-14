@@ -30,6 +30,10 @@ Loki (Logs), Vaultwarden (Passwörter), Pi-hole (DNS + Ad-Blocking) — Proxmox-
 # Pre-Flight vor Stack-Start:
 AGENT_NAMESPACE=CLAUDE make preflight
 
+# Stack testen (Claude Code Session erforderlich):
+/test-stack                            # Slash-Command in Claude Code
+AGENT_NAMESPACE=CLAUDE make test       # Zeigt Anleitung für /test-stack
+
 # Stack starten:
 AGENT_NAMESPACE=CLAUDE make up
 
@@ -42,6 +46,23 @@ python3 mcp_docker_agent.py
 # Status:
 AGENT_NAMESPACE=CLAUDE make ps
 ```
+
+## Test-System
+
+**Aufruf:** `/test-stack` in einer Claude Code Session im Repo-Verzeichnis
+
+**Agenten:**
+- `.claude/agents/stack-tester.md` — zero-knowledge, 3 Ebenen (Config, Container, Healthcheck)
+- `.claude/agents/stack-reviewer.md` — prüft Bericht unabhängig
+
+**Healthcheck-Stolpersteine:**
+- Caddy: `curl http://127.0.0.1` → `308` (nicht 200 — Redirect = gesund)
+- Vaultwarden: `-H "Host: vault.$HOME_DOMAIN" .../api/alive` → `200`
+- Pi-hole: `dig @$LAN_IP google.com` (Port 53 an LAN_IP, nicht localhost)
+
+**Ergebnis:** Memory-Datei `~/.claude/projects/.../memory/test_stack_YYYY-MM-DD.md`
+
+---
 
 ## Host-Setup (einmalig — als root auf dem Docker-Host)
 
