@@ -44,4 +44,4 @@ backup:
 	@echo "[$(AGENT_NS)/$(PROJ_ID)] Backup abgeschlossen."
 
 preflight:
-	@AGENT_NAMESPACE=$(AGENT_NS) AGENT_UID=$(shell id -u) AGENT_GID=$(shell id -g) bash preflight.sh
+	@AGENT_NAMESPACE=$(AGENT_NS) AGENT_UID=$$(id -u) AGENT_GID=$$(id -g) bash preflight.sh
