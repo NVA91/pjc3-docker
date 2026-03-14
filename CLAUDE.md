@@ -63,6 +63,27 @@ AGENT_NAMESPACE=CLAUDE make ps
    → Template: "Edit zone DNS" → Zone: deine Domain
 
 
+## Zukunft: Vollständiger Demo-Test + Vault-Integration
+
+**Ziel:** Preflight soll alle Dienste mit Demo-Daten testen, dann echte Werte in Vaultwarden ablegen.
+
+**Geplanter Ablauf:**
+1. `make preflight` → Phase 2 erstellt `.env` aus `.env.example` mit **vollständigen Demo-Werten** für alle Dienste (nicht nur Pflichtfelder — auch Pi-hole-Passwort, Vaultwarden-Admin-Token, etc.)
+2. Phase 4 startet Test-Namespace mit Demo-Daten → alle Container laufen durch
+3. Preflight übergibt interaktiv eine **Checkliste echter Werte** die der User ausfüllt
+4. Echte Werte werden in **Vaultwarden** gespeichert (nicht in `.env` committed)
+5. Produktion liest Secrets aus Vaultwarden statt aus `.env`
+
+**Was noch fehlt:**
+- `phase2_env()` ergänzen: Demo-Werte für alle Dienste (pihole_webpassword, vw_admin_token, Caddyfile-Domain)
+- `phase4_test_namespace()` erweitern: Container-Healthcheck pro Service
+- Neues Skript `vault_import.sh`: echte Werte interaktiv abfragen → in Vaultwarden speichern via API
+- Preflight Phase 5 (neu): Secrets aus Vaultwarden lesen + validieren vor Produktionsstart
+
+**Spec-Datei anlegen wenn bereit:** `docs/superpowers/specs/YYYY-MM-DD-vault-integration-design.md`
+
+---
+
 ## Agent-Workflow: Neuen Service hinzufügen
 
 1. `system_wizard()` aufrufen → Port-Check, Secret-Check, Route-Check
