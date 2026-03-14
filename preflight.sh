@@ -67,6 +67,13 @@ phase1_syntax() {
     ok "Port 53/udp frei"
 }
 
+phase3_dryrun() {
+    info "Phase 3: Dry-Run (AGENT_NAMESPACE=TEST)"
+    AGENT_NAMESPACE=TEST AGENT_UID="${AGENT_UID}" AGENT_GID="${AGENT_GID}" \
+        docker compose --dry-run up 2>&1 || fail "Dry-Run fehlgeschlagen — Stack würde nicht starten"
+    ok "Dry-Run erfolgreich"
+}
+
 main() {
     echo ""
     info "=== pjc3-docker Pre-Flight Check ==="
@@ -77,7 +84,14 @@ main() {
     echo ""
     ok "=== Phase 1 abgeschlossen ==="
     echo ""
-    info "Nächste Schritte: Phase 3 (Dry-Run) und Phase 4 (Test-Namespace) — coming soon."
+    read -r -p "$(echo -e "${YELLOW}[INFO]${NC} Phase 3 (Dry-Run) starten? [j/N] ")" ans
+    [[ "$ans" == "j" ]] || { info "Abgebrochen nach Phase 1."; exit 0; }
+
+    phase3_dryrun
+    echo ""
+    ok "=== Phase 3 abgeschlossen ==="
+    echo ""
+    info "Nächste Schritte: Phase 4 (Test-Namespace) — coming soon."
     info "Für jetzt: 'AGENT_NAMESPACE=CLAUDE make up' manuell starten."
 }
 
