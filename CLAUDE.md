@@ -1,5 +1,8 @@
 # CLAUDE.md — Projekt pjc3-docker
 
+> **Direktive:** `.claude/agent-directive.md` — Hierarchie, Isolation, Zero Tolerance. Pflichtlektüre vor jeder Aktion.
+> **Regeln:** `REGEL.md` — Repo-Grenzen, Verbote, Git-Regeln.
+
 ## Zweck
 Home-Infrastruktur Stack: Caddy (Reverse Proxy), Prometheus/Grafana (Monitoring),
 Loki (Logs), Vaultwarden (Passwörter), Pi-hole (DNS + Ad-Blocking) — Proxmox-ready, MCP-verbunden.
