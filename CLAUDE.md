@@ -27,6 +27,9 @@ Loki (Logs), Vaultwarden (Passwörter), Pi-hole (DNS + Ad-Blocking) — Proxmox-
 
 ## Befehle
 ```bash
+# Pre-Flight vor Stack-Start:
+AGENT_NAMESPACE=CLAUDE make preflight
+
 # Stack starten:
 AGENT_NAMESPACE=CLAUDE make up
 
@@ -59,21 +62,25 @@ AGENT_NAMESPACE=CLAUDE make ps
 3. Cloudflare Dashboard → My Profile → API Tokens → Create Token
    → Template: "Edit zone DNS" → Zone: deine Domain
 
-## Nächste Aufgabe: Pre-Flight Checkliste implementieren
 
-**Status:** Design approved — Plan noch nicht erstellt
-**Spec:** `docs/superpowers/specs/2026-03-14-preflight-design.md`
+## Zukunft: Vollständiger Demo-Test + Vault-Integration
 
-**Beim nächsten Start:**
-1. `writing-plans` Skill aufrufen mit der Spec als Grundlage
-2. Plan wird unter `docs/superpowers/plans/2026-03-14-preflight.md` gespeichert
-3. `subagent-driven-development` für Implementierung
+**Ziel:** Preflight soll alle Dienste mit Demo-Daten testen, dann echte Werte in Vaultwarden ablegen.
 
-**Was entsteht:** `preflight.sh` + `make preflight` — 4-phasige Validierung vor Stack-Start:
-- Phase 1: Syntax & Config (.env, YAML, Caddyfile, Secrets, Ports)
-- Phase 2: .env-Subagent (nur bei fehlendem .env)
-- Phase 3: Dry-Run (AGENT_NAMESPACE=TEST)
-- Phase 4: Test-Namespace Start → manuelles OK → Produktion
+**Geplanter Ablauf:**
+1. `make preflight` → Phase 2 erstellt `.env` aus `.env.example` mit **vollständigen Demo-Werten** für alle Dienste (nicht nur Pflichtfelder — auch Pi-hole-Passwort, Vaultwarden-Admin-Token, etc.)
+2. Phase 4 startet Test-Namespace mit Demo-Daten → alle Container laufen durch
+3. Preflight übergibt interaktiv eine **Checkliste echter Werte** die der User ausfüllt
+4. Echte Werte werden in **Vaultwarden** gespeichert (nicht in `.env` committed)
+5. Produktion liest Secrets aus Vaultwarden statt aus `.env`
+
+**Was noch fehlt:**
+- `phase2_env()` ergänzen: Demo-Werte für alle Dienste (pihole_webpassword, vw_admin_token, Caddyfile-Domain)
+- `phase4_test_namespace()` erweitern: Container-Healthcheck pro Service
+- Neues Skript `vault_import.sh`: echte Werte interaktiv abfragen → in Vaultwarden speichern via API
+- Preflight Phase 5 (neu): Secrets aus Vaultwarden lesen + validieren vor Produktionsstart
+
+**Spec-Datei anlegen wenn bereit:** `docs/superpowers/specs/YYYY-MM-DD-vault-integration-design.md`
 
 ---
 

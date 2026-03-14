@@ -10,7 +10,7 @@ PROJ_ID       := pjc3docker
 COMPOSE_PROJ  := $(AGENT_NS)-$(PROJ_ID)
 COMPOSE       := docker compose -p $(COMPOSE_PROJ)
 
-.PHONY: up up-monitor down ps logs guard backup
+.PHONY: up up-monitor down ps logs guard backup preflight
 
 up:
 	@echo "[$(AGENT_NS)/$(PROJ_ID)] Stack starten..."
@@ -42,3 +42,6 @@ backup:
 	@echo "[$(AGENT_NS)/$(PROJ_ID)] Starte Backup..."
 	@AGENT_NAMESPACE=$(AGENT_NS) bash backup.sh
 	@echo "[$(AGENT_NS)/$(PROJ_ID)] Backup abgeschlossen."
+
+preflight:
+	@AGENT_NAMESPACE=$(AGENT_NS) AGENT_UID=$$(id -u) AGENT_GID=$$(id -g) bash preflight.sh
