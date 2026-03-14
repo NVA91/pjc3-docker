@@ -14,6 +14,24 @@ ok()   { echo -e "${GREEN}[OK]${NC}   $*"; }
 fail() { echo -e "${RED}[FAIL]${NC} $*"; exit 1; }
 info() { echo -e "${YELLOW}[INFO]${NC} $*"; }
 
+phase2_env() {
+    info "Phase 2: Demo-Env aus .env.example erstellen"
+    [[ -f ".env.example" ]] || fail ".env.example nicht gefunden — kann keine Demo-Env erstellen"
+
+    cp .env.example .env
+    ok ".env aus .env.example erstellt"
+    echo ""
+    info "Bitte jetzt die Pflichtfelder in .env anpassen:"
+    info "  HOME_DOMAIN   — deine Heim-Domain (z.B. home.example.com)"
+    info "  LAN_IP        — IP des Docker-Hosts im LAN (z.B. 192.168.178.100)"
+    info "  CLOUDFLARE_API_TOKEN — Cloudflare API Token (Edit zone DNS)"
+    echo ""
+    info "Datei: $(pwd)/.env"
+    echo ""
+    read -r -p "$(echo -e "${YELLOW}[INFO]${NC} .env fertig ausgefüllt? Weiter mit Phase 1? [j/N] ")" ans
+    [[ "$ans" == "j" ]] || { info "Abgebrochen. Bitte .env ausfüllen und preflight erneut starten."; exit 0; }
+}
+
 # --- Pflicht-Env ---
 : "${AGENT_NAMESPACE:?AGENT_NAMESPACE muss gesetzt sein}"
 : "${AGENT_UID:?AGENT_UID muss gesetzt sein}"
@@ -23,7 +41,10 @@ phase1_syntax() {
     info "Phase 1: Syntax & Config-Validierung"
 
     # .env vorhanden?
-    [[ -f ".env" ]] || fail ".env nicht gefunden. Bitte aus .env.example kopieren."
+    if [[ ! -f ".env" ]]; then
+        info ".env fehlt — starte Phase 2 (Demo-Env erstellen)..."
+        phase2_env
+    fi
     ok ".env vorhanden"
 
     # Pflichtfelder in .env
