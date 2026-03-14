@@ -74,6 +74,33 @@ phase3_dryrun() {
     ok "Dry-Run erfolgreich"
 }
 
+phase4_test_namespace() {
+    info "Phase 4: Test-Namespace Start (AGENT_NAMESPACE=TEST)"
+
+    info "Starte Stack im Test-Namespace..."
+    AGENT_NAMESPACE=TEST AGENT_UID="${AGENT_UID}" AGENT_GID="${AGENT_GID}" \
+        docker compose -p "TEST-pjc3docker" up -d 2>&1 || fail "Test-Namespace Start fehlgeschlagen"
+    ok "Test-Stack gestartet"
+
+    info "Warte 5 Sekunden auf Container-Startup..."
+    sleep 5
+
+    running=$(docker compose -p "TEST-pjc3docker" ps --filter "status=running" --format "{{.Name}}" 2>/dev/null | wc -l)
+    total=$(docker compose -p "TEST-pjc3docker" ps --format "{{.Name}}" 2>/dev/null | wc -l)
+
+    if [[ "$running" -lt "$total" ]]; then
+        info "Container-Status:"
+        docker compose -p "TEST-pjc3docker" ps
+        docker compose -p "TEST-pjc3docker" down 2>/dev/null || true
+        fail "Nicht alle Container laufen ($running von $total)"
+    fi
+    ok "Alle ${total} Container laufen im Test-Namespace"
+
+    info "Test-Stack wird jetzt beendet..."
+    docker compose -p "TEST-pjc3docker" down 2>&1
+    ok "Test-Stack entfernt"
+}
+
 main() {
     echo ""
     info "=== pjc3-docker Pre-Flight Check ==="
@@ -91,8 +118,25 @@ main() {
     echo ""
     ok "=== Phase 3 abgeschlossen ==="
     echo ""
-    info "Nächste Schritte: Phase 4 (Test-Namespace) — coming soon."
-    info "Für jetzt: 'AGENT_NAMESPACE=CLAUDE make up' manuell starten."
+    read -r -p "$(echo -e "${YELLOW}[INFO]${NC} Phase 4 (Test-Namespace Start) starten? [j/N] ")" ans
+    [[ "$ans" == "j" ]] || { info "Abgebrochen nach Phase 3."; exit 0; }
+
+    phase4_test_namespace
+    echo ""
+    ok "=== Phase 4 abgeschlossen — alle Phasen bestanden ==="
+    echo ""
+    info "Stack bereit. Produktionsstart:"
+    info "  AGENT_NAMESPACE=CLAUDE make up"
+    echo ""
+    read -r -p "$(echo -e "${YELLOW}[INFO]${NC} Produktion jetzt starten? [j/N] ")" prod_ans
+    if [[ "$prod_ans" == "j" ]]; then
+        info "Starte Produktion..."
+        AGENT_NAMESPACE="${AGENT_NAMESPACE}" AGENT_UID="${AGENT_UID}" AGENT_GID="${AGENT_GID}" \
+            docker compose -p "${AGENT_NAMESPACE}-pjc3docker" up -d
+        ok "Produktion gestartet."
+    else
+        info "Produktionsstart übersprungen. Manuell: AGENT_NAMESPACE=CLAUDE make up"
+    fi
 }
 
 main "$@"
